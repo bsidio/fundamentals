@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
 /* Minimal Study Interface */
@@ -16,8 +15,8 @@
   --color-accent-muted: #404040;
   --color-success: #22c55e;
 
-  /* Typography */
-  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  /* Typography - system font stack for reliability */
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 * {
