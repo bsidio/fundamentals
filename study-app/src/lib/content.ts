@@ -13,8 +13,12 @@ export function getTopicById(id: string) {
 }
 
 export function getTopicContent(filePath: string): string {
-  // Path relative to study-plan directory (parent of study-app)
-  const fullPath = path.join(process.cwd(), "..", filePath);
+  // In production (Docker), content is at /content
+  // In development, content is in parent directory
+  const basePath = process.env.NODE_ENV === "production"
+    ? "/content"
+    : path.join(process.cwd(), "..");
+  const fullPath = path.join(basePath, filePath);
 
   try {
     return fs.readFileSync(fullPath, "utf-8");
