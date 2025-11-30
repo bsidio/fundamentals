@@ -152,3 +152,138 @@ Set a timer for 2 minutes and practice explaining your project out loud. Record 
 5. No filler words or long pauses
 
 Repeat until it feels natural.
+
+---
+
+## Additional Technical Deep Dives
+
+### 5. Kubernetes Deployment Strategy
+
+**Key Points:**
+- Multi-container deployment with separate frontend/backend
+- Resource requests/limits for cost efficiency
+- Health checks for zero-downtime deployments
+- Secrets management for database credentials
+
+**Prepared Deep-Dive:**
+> "For deployment, I designed Kubernetes manifests with separate deployments for frontend and backend. The backend deployment has resource limits - 256MB memory request with 512MB limit - and both liveness and readiness probes hitting /health.
+>
+> Database credentials are in K8s Secrets, injected as environment variables. For updates, I use rolling deployments with maxSurge=1 and maxUnavailable=0, so there's always full capacity. If the new pods fail health checks, the rollout stops automatically."
+
+### 6. CI/CD Pipeline Design
+
+**Key Points:**
+- Automated testing on every PR
+- Docker image builds with commit SHA tags
+- GitOps deployment approach
+- Rollback strategy
+
+**Prepared Deep-Dive:**
+> "The CI/CD pipeline has four stages. First, run tests - pytest for backend, Jest for frontend. Second, build Docker images tagged with the commit SHA for traceability. Third, push to our container registry. Fourth, update the Kubernetes manifests with the new image tag.
+>
+> We use GitOps - ArgoCD watches the manifest repo and syncs to the cluster. For rollbacks, we just revert the manifest commit and ArgoCD handles the rest. Image tags are immutable, so we can always trace back to exact code."
+
+### 7. Monitoring and Observability
+
+**Key Points:**
+- Structured logging with request context
+- Prometheus metrics for dashboards
+- Error tracking with context
+- Performance monitoring
+
+**Prepared Deep-Dive:**
+> "For observability, I implemented structured JSON logging with request IDs that flow through the entire request lifecycle. This makes it easy to trace issues across services.
+>
+> I'd add Prometheus metrics for key operations - request latency histograms, error rates, and business metrics like experiments created. These feed into Grafana dashboards. For errors, we'd integrate with something like Sentry to capture stack traces with context."
+
+### 8. Performance Optimization
+
+**Key Points:**
+- Database query optimization with indexes
+- Response caching for repeated reads
+- Pagination for large datasets
+- Frontend optimization with React.memo
+
+**Prepared Deep-Dive:**
+> "Performance optimization started with the database. I used EXPLAIN ANALYZE to identify slow queries and added appropriate indexes. The composite index on metrics(run_id, name) cut query time from 200ms to 5ms for the common 'get metrics for run' query.
+>
+> For the API, I cache aggregated stats in Redis with 60-second TTL since they're expensive to compute and don't need real-time accuracy. On the frontend, I use useMemo for filtered lists and React.memo for expensive components to prevent unnecessary re-renders."
+
+---
+
+## Behavioral Questions Tied to Your Project
+
+### "Tell me about a technical decision you made and why"
+
+> "When designing the metrics storage, I initially planned to store metrics as a JSON blob within the runs table. But I realized we'd need to query individual metrics - things like 'show me accuracy over all runs for this experiment.'
+>
+> I refactored to a normalized metrics table with proper indexes. The trade-off was more complex queries and slightly more storage, but we gained query flexibility and better performance for the dashboard aggregations. This is a case where I had to think about query patterns before committing to a schema."
+
+### "Describe a time you had to learn something quickly"
+
+> "When building this project, I hadn't used FastAPI before. I had a week to get the backend running. I focused on the essentials - routing, Pydantic models for validation, and async database operations.
+>
+> I read the official docs, built small test endpoints, and incrementally added complexity. Within a few days I was productive. The key was focusing on what I needed for this project rather than trying to learn everything. I also leveraged my Flask experience - many concepts transferred directly."
+
+### "How do you handle disagreements about technical decisions?"
+
+> "I focus on data and trade-offs rather than opinions. In this project, there was a question about whether to use REST or GraphQL. I outlined the trade-offs: GraphQL gives clients flexibility but adds complexity; REST is simpler and sufficient for our known query patterns.
+>
+> Since we had a small, controlled set of use cases and tight timeline, REST made more sense. I documented the decision and the reasoning so if requirements changed, we could revisit it. The key is making decisions reversible when possible and documenting why you made them."
+
+---
+
+## Questions to Ask Them
+
+Having good questions shows engagement and helps you evaluate the role:
+
+### About the Technical Environment
+- "What does your deployment pipeline look like?"
+- "How do you handle database migrations in production?"
+- "What monitoring and alerting do you have in place?"
+- "How do you approach technical debt?"
+
+### About the Team and Role
+- "What does a typical project look like for this role?"
+- "How are technical decisions made on the team?"
+- "What would success look like in the first 6 months?"
+- "What's the biggest challenge the team is facing right now?"
+
+### About ML/Platform Specifics
+- "How do ML engineers currently track experiments?"
+- "What's the scale of training jobs you're running?"
+- "How do you manage GPU resources across teams?"
+- "What's the relationship between platform team and ML researchers?"
+
+---
+
+## Red Flags to Avoid in Your Answers
+
+### Don't:
+- **Over-claim:** "I built the entire system myself" when you had a team
+- **Be vague:** "It was a standard setup" without specifics
+- **Dismiss complexity:** "It was pretty simple" - everything has challenges
+- **Badmouth:** Never criticize previous employers or teammates
+- **Be arrogant:** "Obviously I chose the best approach"
+
+### Do:
+- **Be specific:** Use numbers, metrics, concrete examples
+- **Show growth:** "I learned X from this challenge"
+- **Credit others:** "The team helped with..." or "A colleague suggested..."
+- **Acknowledge trade-offs:** "The downside was... but we accepted it because..."
+- **Show enthusiasm:** Genuine interest in the problem space
+
+---
+
+## Final Preparation Checklist
+
+Before your interview:
+
+- [ ] Practiced 2-minute project pitch 5+ times
+- [ ] Can explain each technology choice with reasoning
+- [ ] Have specific numbers/metrics where possible
+- [ ] Prepared 3-4 questions to ask them
+- [ ] Know what you'd do differently
+- [ ] Can discuss one component in-depth (DB, API, or UI)
+- [ ] Have behavioral examples ready (conflict, learning, failure)
+- [ ] Reviewed the company's tech stack and product

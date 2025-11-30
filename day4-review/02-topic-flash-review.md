@@ -233,22 +233,490 @@ db.query(User).filter(User.name == user_input)
 
 ---
 
+## FastAPI
+
+### Request Validation
+```python
+from pydantic import BaseModel, Field
+
+class CreateExperiment(BaseModel):
+    name: str = Field(..., min_length=1, max_length=100)
+    owner: str
+    description: str | None = None
+
+@app.post("/experiments", status_code=201)
+async def create_experiment(data: CreateExperiment):
+    # Pydantic auto-validates, returns 422 on invalid
+    return {"id": uuid4(), **data.model_dump()}
+```
+
+**Q: Why use Pydantic?**
+> Automatic validation, type coercion, serialization. Clear error messages. Documentation generation.
+
+### Dependency Injection
+```python
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+@app.get("/experiments")
+def list_experiments(db: Session = Depends(get_db)):
+    return db.query(Experiment).all()
+```
+
+**Q: Why dependency injection?**
+> Testability (mock dependencies), code reuse, automatic cleanup. Same pattern for auth, DB, config.
+
+### Error Handling
+```python
+from fastapi import HTTPException
+
+@app.get("/experiments/{id}")
+async def get_experiment(id: str, db: Session = Depends(get_db)):
+    exp = db.query(Experiment).filter(Experiment.id == id).first()
+    if not exp:
+        raise HTTPException(status_code=404, detail="Experiment not found")
+    return exp
+```
+
+**Q: HTTP status code semantics?**
+> 2xx success (200 OK, 201 Created). 4xx client error (400 Bad Request, 401 Unauthorized, 404 Not Found). 5xx server error.
+
+---
+
+## API Design
+
+### REST Principles
+```
+GET    /experiments        List all
+POST   /experiments        Create new
+GET    /experiments/{id}   Get specific
+PUT    /experiments/{id}   Full update
+PATCH  /experiments/{id}   Partial update
+DELETE /experiments/{id}   Remove
+```
+
+**Q: REST vs GraphQL?**
+> REST: Simple, cacheable, standardized. GraphQL: Flexible queries, reduces over-fetching, single endpoint. Choose REST for simple APIs, GraphQL when clients need flexibility.
+
+### API Versioning
+```python
+# URL versioning
+@app.get("/v1/experiments")
+@app.get("/v2/experiments")
+
+# Header versioning
+# Accept: application/vnd.api+json; version=2
+```
+
+**Q: When to version?**
+> When making breaking changes. Non-breaking (add field) doesn't need version. Breaking (remove field, change type) needs version.
+
+---
+
+## Linux
+
+### Process Management
+```bash
+# View processes
+ps aux | grep python
+top -c
+htop
+
+# Background/foreground
+./script.sh &          # Run in background
+jobs                   # List background jobs
+fg %1                  # Bring job 1 to foreground
+nohup ./long.sh &      # Survives logout
+
+# Signals
+kill -15 PID           # SIGTERM (graceful)
+kill -9 PID            # SIGKILL (force)
+kill -HUP PID          # SIGHUP (reload config)
+```
+
+**Q: SIGTERM vs SIGKILL?**
+> SIGTERM (15): graceful shutdown, process can catch and cleanup. SIGKILL (9): immediate termination, cannot be caught.
+
+### File System
+```bash
+# Disk usage
+df -h                  # Filesystem usage
+du -sh /var/log/*      # Directory sizes
+ncdu                   # Interactive disk usage
+
+# File operations
+find /var -name "*.log" -mtime +7   # Files older than 7 days
+xargs rm < files.txt                # Bulk delete
+rsync -avz src/ dest/               # Efficient copy
+```
+
+**Q: When use find vs locate?**
+> find: real-time search, slower. locate: uses index, fast but may be stale. Use find for accuracy, locate for speed.
+
+### Networking
+```bash
+# Check connectivity
+ping -c 3 google.com
+traceroute api.example.com
+dig api.example.com
+
+# Port checking
+netstat -tlnp          # Listening ports
+ss -tlnp               # Modern netstat
+lsof -i :8000          # What's using port 8000
+curl -v http://localhost:8000/health
+```
+
+**Q: How debug "connection refused"?**
+> 1) Is process running? 2) Listening on right port/interface? 3) Firewall blocking? 4) SELinux/AppArmor?
+
+---
+
+## Docker
+
+### Dockerfile Best Practices
+```dockerfile
+# Multi-stage build for smaller image
+FROM python:3.11-slim AS builder
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --user -r requirements.txt
+
+FROM python:3.11-slim
+WORKDIR /app
+COPY --from=builder /root/.local /root/.local
+COPY . .
+ENV PATH=/root/.local/bin:$PATH
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0"]
+```
+
+**Q: Why multi-stage builds?**
+> Smaller final image. Build dependencies not in production image. Better security (less attack surface).
+
+### Docker Compose
+```yaml
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://db:5432/app
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:15
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+```
+
+**Q: depends_on vs healthcheck?**
+> depends_on: start order only. healthcheck: actual readiness. Use both for proper startup orchestration.
+
+---
+
+## System Design
+
+### Scaling Patterns
+```
+Vertical Scaling:    Bigger machine (limited)
+Horizontal Scaling:  More machines (preferred)
+
+Read-Heavy:          Caching, read replicas
+Write-Heavy:         Sharding, message queues
+Compute-Heavy:       Workers, async processing
+```
+
+**Q: First step when scaling?**
+> Measure first! Find the actual bottleneck (CPU? Memory? I/O? Network?). Don't optimize blindly.
+
+### Caching
+```python
+# Cache-aside pattern
+def get_experiment(id: str):
+    # 1. Check cache
+    cached = redis.get(f"exp:{id}")
+    if cached:
+        return json.loads(cached)
+
+    # 2. Query database
+    exp = db.query(Experiment).get(id)
+
+    # 3. Update cache
+    redis.setex(f"exp:{id}", 300, exp.json())  # 5 min TTL
+    return exp
+```
+
+**Q: Cache invalidation strategies?**
+> TTL: simple, eventual consistency. Write-through: update cache on write. Event-based: invalidate on data change.
+
+### Message Queues
+```python
+# Producer
+channel.basic_publish(
+    exchange='',
+    routing_key='metrics',
+    body=json.dumps({'run_id': '...', 'value': 0.95})
+)
+
+# Consumer
+def callback(ch, method, properties, body):
+    metric = json.loads(body)
+    db.insert(metric)
+    ch.basic_ack(delivery_tag=method.delivery_tag)
+```
+
+**Q: When use message queues?**
+> Async processing, decoupling services, handling traffic spikes, reliable delivery. Examples: metrics ingestion, email sending, job processing.
+
+---
+
+## Observability
+
+### Logging Best Practices
+```python
+import structlog
+
+logger = structlog.get_logger()
+
+# Structured logging with context
+logger.info(
+    "experiment_created",
+    experiment_id=exp.id,
+    owner=exp.owner,
+    duration_ms=elapsed
+)
+```
+
+**Q: Why structured logging?**
+> Machine-parseable, filterable, aggregatable. Can query: "show all errors for experiment X in last hour."
+
+### Metrics (Prometheus style)
+```python
+from prometheus_client import Counter, Histogram
+
+requests_total = Counter(
+    'api_requests_total',
+    'Total requests',
+    ['method', 'endpoint', 'status']
+)
+
+request_duration = Histogram(
+    'api_request_duration_seconds',
+    'Request latency'
+)
+
+@app.middleware("http")
+async def metrics_middleware(request, call_next):
+    with request_duration.time():
+        response = await call_next(request)
+    requests_total.labels(
+        method=request.method,
+        endpoint=request.url.path,
+        status=response.status_code
+    ).inc()
+    return response
+```
+
+**Q: Key metrics to track?**
+> RED: Rate (requests/sec), Errors (error rate), Duration (latency). USE: Utilization, Saturation, Errors for resources.
+
+### Distributed Tracing
+```python
+# Add trace ID to all logs/requests
+@app.middleware("http")
+async def tracing_middleware(request, call_next):
+    trace_id = request.headers.get("X-Trace-ID", str(uuid4()))
+    structlog.contextvars.bind_contextvars(trace_id=trace_id)
+    response = await call_next(request)
+    response.headers["X-Trace-ID"] = trace_id
+    return response
+```
+
+**Q: Why distributed tracing?**
+> Follow request across services. Find where time is spent. Debug issues in microservices.
+
+---
+
+## Testing
+
+### Testing Pyramid
+```
+         /\
+        /  \      E2E Tests (few)
+       /----\     Integration Tests (some)
+      /------\    Unit Tests (many)
+     /--------\
+```
+
+### Python Testing
+```python
+import pytest
+from fastapi.testclient import TestClient
+
+# Unit test
+def test_format_metric():
+    result = format_metric({"value": 0.95})
+    assert result == "0.95"
+
+# Integration test
+@pytest.fixture
+def client():
+    return TestClient(app)
+
+def test_create_experiment(client):
+    response = client.post(
+        "/experiments",
+        json={"name": "test", "owner": "me"}
+    )
+    assert response.status_code == 201
+    assert "id" in response.json()
+```
+
+**Q: Unit vs Integration tests?**
+> Unit: isolated function, fast, mock dependencies. Integration: multiple components, slower, real dependencies. Both needed.
+
+### React Testing
+```tsx
+import { render, screen, fireEvent } from '@testing-library/react';
+
+test('filter updates list', async () => {
+    render(<ExperimentList />);
+
+    // Find and interact with filter
+    const input = screen.getByPlaceholderText('Filter...');
+    fireEvent.change(input, { target: { value: 'training' } });
+
+    // Assert filtered results
+    await waitFor(() => {
+        expect(screen.getByText('training-run-1')).toBeInTheDocument();
+        expect(screen.queryByText('inference-run')).not.toBeInTheDocument();
+    });
+});
+```
+
+**Q: What to test in React?**
+> User interactions, conditional rendering, async data loading, error states. Test behavior, not implementation.
+
+---
+
+## CI/CD
+
+### GitHub Actions
+```yaml
+name: CI
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - run: pytest --cov=app tests/
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: docker/build-push-action@v5
+        with:
+          push: ${{ github.ref == 'refs/heads/main' }}
+          tags: myapp:${{ github.sha }}
+```
+
+**Q: CI vs CD?**
+> CI (Continuous Integration): automated testing on every commit. CD (Continuous Delivery): automated deployment to staging/production.
+
+### Deployment Strategies
+```yaml
+# Rolling update (default)
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 1
+    maxUnavailable: 0
+
+# Blue-green: run both versions, switch traffic
+# Canary: gradual traffic shift to new version
+```
+
+**Q: When use each strategy?**
+> Rolling: most cases, zero downtime. Blue-green: instant rollback needed. Canary: risky changes, want to monitor gradually.
+
+---
+
 ## Quick Self-Test
 
+### Python & FastAPI
 1. When would you use async Python?
-2. What's the difference between props and state?
-3. Why create database indexes?
-4. What's a Kubernetes Service?
-5. How does React prevent XSS?
-6. What's the N+1 query problem?
+2. Why use Pydantic models?
+3. What's dependency injection good for?
+
+### React
+4. What's the difference between props and state?
+5. When does useEffect run?
+6. What are React keys for?
+
+### Database
+7. Why create database indexes?
+8. What's the N+1 query problem?
+9. INNER JOIN vs LEFT JOIN?
+
+### Kubernetes
+10. What's a Kubernetes Service?
+11. Liveness vs readiness probes?
+12. What happens when memory limit exceeded?
+
+### Security
+13. How does React prevent XSS?
+14. How do ORMs prevent SQL injection?
+15. What is CSRF?
+
+### System Design
+16. When use message queues?
+17. Cache invalidation strategies?
+18. First step when scaling?
 
 ---
 
 ## Answers
 
+### Python & FastAPI
 1. I/O-bound operations with many concurrent requests (web servers, API calls)
-2. Props: passed from parent, read-only. State: internal, mutable, triggers re-renders
-3. Speed up queries from O(n) to O(log n) for frequently filtered/joined columns
-4. Stable network endpoint that routes traffic to pods matching a selector
-5. Escapes HTML by default when rendering with `{}`
-6. Making N additional queries for each row in the initial result set. Fix with eager loading/joins.
+2. Automatic validation, type coercion, clear error messages, documentation
+3. Testability, code reuse, automatic cleanup
+
+### React
+4. Props: passed from parent, read-only. State: internal, mutable, triggers re-renders
+5. After render. `[]` deps: only on mount. `[x]`: when x changes. No deps: every render
+6. Help React identify list items that changed, added, or removed for efficient updates
+
+### Database
+7. Speed up queries from O(n) to O(log n) for frequently filtered/joined columns
+8. Making N additional queries for each row in the initial result set. Fix with eager loading/joins
+9. INNER: only matching rows. LEFT: all left rows + matching right (nulls for no match)
+
+### Kubernetes
+10. Stable network endpoint that routes traffic to pods matching a selector
+11. Liveness: is alive? Fails → restart. Readiness: can accept traffic? Fails → remove from endpoints
+12. Container is OOMKilled (terminated). CPU limit just throttles.
+
+### Security
+13. Escapes HTML by default when rendering with `{}`
+14. Parameterized queries - user input sent separately, treated as data not code
+15. Cross-Site Request Forgery: tricking logged-in user to make unintended requests
+
+### System Design
+16. Async processing, decoupling services, handling traffic spikes, reliable delivery
+17. TTL (simple), write-through (strong consistency), event-based (explicit invalidation)
+18. Measure first! Find the actual bottleneck before optimizing
