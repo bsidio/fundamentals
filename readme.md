@@ -1,499 +1,189 @@
-~8 hours for Days 1–3
+# ML Experiment Tracker - Interview Study Plan
 
-~4 hours for Day 4 (half day)
+A 4-day intensive study plan for preparing to discuss a simple ML Experiment Tracking system in technical interviews.
 
-Goal: be able to clearly talk through and partially demo a tiny “experiment tracking” system (even if it’s not fully finished).
+**Total Time:** ~12 hours (8h for Days 1-3, 4h for Day 4)
 
-We’ll keep everything centered around one mini-project so your prep feels coherent:
+**Goal:** Clearly explain and partially demo a small "experiment tracking" system covering Python, React, databases, Kubernetes, and system design.
 
-🧪 Mini-project theme: “Simple ML Experiment Tracker”
-Backend in Python (Flask/FastAPI), DB schema, small React dashboard, deployed mentally to K8s.
+---
 
-Day 1 – Python + Backend + Data Modeling (Full Day)
-Morning (3–4h): Python & web backend fundamentals
+## Project Overview
 
-Goals
+### Mini-Project: Simple ML Experiment Tracker
 
-Refresh Python fundamentals as they relate to services/tools
+- **Backend:** Python (FastAPI)
+- **Database:** PostgreSQL with proper schema design
+- **Frontend:** React dashboard with filters and visualizations
+- **Deployment:** Kubernetes manifests and CI/CD pipeline
+- **Integration:** HPC/GPU cluster concepts
 
-Get a minimal API skeleton running
+---
 
-Do
+## Study Schedule
 
-Python warmup (60–90 min)
+### Day 1 - Python + Backend + Data Modeling (6-8h)
 
-Practice:
+| Block | Duration | Topics |
+|-------|----------|--------|
+| Morning | 3-4h | Python warmup, FastAPI basics, REST API design |
+| Afternoon | 3h | Database schema design, SQL queries, ORM integration |
+| Evening | 1-2h | System design sketch, architecture diagram |
 
-List/dict/set operations, comprehensions
+**Key Deliverables:**
+- Working API with `/health`, `/experiments` endpoints
+- Database schema for experiments, runs, metrics
+- Architecture diagram with caching and message queue
 
-with context managers
+### Day 2 - React + Security (6-8h)
 
-try/except with clean error messages
+| Block | Duration | Topics |
+|-------|----------|--------|
+| Morning | 3-4h | React fundamentals, hooks, data fetching |
+| Afternoon | 3h | Dashboard UI, security fundamentals (OWASP, auth) |
+| Evening | 1-2h | Story building, project summary practice |
 
-Write a tiny script:
+**Key Deliverables:**
+- React dashboard with experiment list and filters
+- Security notes (SQL injection, XSS, CSRF, RBAC)
+- 2-minute project pitch
 
-Reads JSON config for an “experiment” (name, params, seed)
+### Day 3 - Kubernetes + Linux + DevOps (6-8h)
 
-Prints it in a nice table + validates required fields
+| Block | Duration | Topics |
+|-------|----------|--------|
+| Morning | 3-4h | Kubernetes concepts, manifests, CI/CD pipeline |
+| Afternoon | 3h | Linux fundamentals, debugging, HPC basics |
+| Evening | 1-2h | ML fundamentals review |
 
-Backend basics (Flask or FastAPI) (2–2.5h)
+**Key Deliverables:**
+- K8s Deployment, Service, ConfigMap, Secret manifests
+- CI/CD pipeline (test → build → deploy)
+- Linux debugging workflow
 
-Create a minimal API project:
+### Day 4 - Review + Mock Interview (4h)
 
-/health → returns {status: "ok"}
+| Block | Duration | Topics |
+|-------|----------|--------|
+| Block 1 | 2h | Cheat sheet creation, topic flash review |
+| Block 2 | 2h | Mock interview practice, weak spot refinement |
 
-/experiments (GET/POST)
+**Key Deliverables:**
+- One-page cheat sheet
+- Polished answers to common questions
 
-Add:
+---
 
-Simple validation
+## Core Technical Stack
+
+| Category | Technologies |
+|----------|-------------|
+| **Backend** | Python, FastAPI, Pydantic, SQLAlchemy |
+| **Frontend** | React, TypeScript, Tailwind CSS |
+| **Database** | PostgreSQL, Redis (caching) |
+| **Infrastructure** | Kubernetes, Docker, GitHub Actions |
+| **Integration** | SLURM, Message Queues |
 
-Proper status codes
+---
 
-Basic structured logging (log level, timestamp, endpoint)
-
-End-of-block checkpoint (5–10 min)
-
-Can you explain out loud:
-
-What a REST API is?
-
-Difference between GET vs POST?
-
-How your framework routes a request to a handler?
-
-Afternoon (3h): Relational DB design + infra basics
-
-Goals
-
-Be able to design the schema for experiment tracking
-
-Comfort talking about indexes & queries
-
-Do
-
-Schema design (1.5–2h)
-
-Design tables on paper or in a file:
-
-experiments(id, name, owner, description, created_at, status)
-
-runs(id, experiment_id, started_at, ended_at, status, seed)
-
-metrics(id, run_id, name, step, value, timestamp)
-
-For each table, decide:
-
-Primary keys
-
-Foreign keys
-
-A couple of helpful indexes (e.g. on metrics(run_id, name)).
-
-Write 4–5 SQL queries:
-
-Runs for a given experiment
-
-Latest run per experiment
-
-Average of a metric for a run
-
-Runs filtered by status and date
-
-Integrate DB with API (1–1.5h)
-
-Use any ORM you like (SQLAlchemy, Django ORM conceptually).
-
-Implement:
-
-POST /experiments → writes to DB
-
-GET /experiments/{id} → joins runs to show summary
-
-End-of-block checkpoint
-
-Can you explain:
-
-Why you chose relational DB here?
-
-What an index is and how it speeds queries up?
-
-Evening (1–2h): System design sketch
-
-Goals
-
-Have a high-level architecture in your head (and notes) you can present.
-
-Do
-
-Draw or write a simple architecture:
-
-Frontend (React) → Backend API (Flask) → Postgres
-
-Optional: Redis cache in front of DB for hot queries
-
-Message broker (e.g. RabbitMQ/Kafka) for:
-
-“job finished” → “update dashboard / send notification”
-
-Jot down bullet points you can later say in interview:
-
-How you’d scale reads/writes
-
-Where you’d put caching
-
-What goes into a message on the queue
-
-Day 2 – React + Dashboards + UX & Security Basics
-Morning (3–4h): React fundamentals
-
-Goals
-
-Be able to build a small dashboard-like UI
-
-Have language to talk about state, props, and fetching data
-
-Do
-
-React warmup (1–1.5h)
-
-Create a minimal app:
-
-<RunList /> component that renders static fake data
-
-Use props to pass in an array of runs
-
-Practice:
-
-useState, useEffect, simple derived values (useMemo if you like)
-
-Data fetching (1.5–2h)
-
-Replace fake data with real fetch:
-
-Call your /experiments API
-
-Show loading / error states
-
-Add filters UI:
-
-Text input filter by experiment name
-
-Dropdown to filter by status (running/completed/failed)
-
-End-of-block checkpoint
-
-Can you explain:
-
-Difference between props vs state?
-
-How you’d organize components in a larger app?
-
-Afternoon (3h): Dashboards + security fundamentals
-
-Goals
-
-Build one “interview-worthy” screen
-
-Be able to say sensible things about securing web apps
-
-Do
-
-Experiment details view (2h)
-
-Build a page like:
-
-List of runs for a selected experiment
-
-Basic metric table or line chart (even with hardcoded data if needed)
-
-Include:
-
-Status badges (color by status)
-
-Timestamps formatted nicely
-
-Security pass (1h)
-
-Add (even conceptually):
-
-Simple API-key or token check on backend
-
-CORS config on backend
-
-Review and write short notes on:
-
-SQL injection & how ORMs/prepared statements help
-
-XSS basics & escaping user input
-
-CSRF conceptually (forms, cookies, CSRF tokens)
-
-Think about:
-
-How you’d do RBAC for this tool (who can register models, who can only view)
-
-End-of-block checkpoint
-
-Be ready to answer:
-
-“How would you secure an internal dashboard?”
-
-“What common attacks are you aware of?”
-
-Evening (1–2h): Story building
-
-Goals
-
-Turn what you’ve done into a cohesive story.
-
-Do
-
-Write a 1–2 minute project summary you can say out loud:
-
-Problem: “ML engineers need to track experiments and metrics.”
-
-Solution: “I designed a small system with X, Y, Z…”
-
-Technical highlights:
-
-Python + Flask API
-
-Postgres schema and queries
-
-React UI with filters and detail page
-
-Practice saying it like you’re explaining to a hiring manager.
-
-Day 3 – Kubernetes, CI/CD, Linux, HPC & ML Fundamentals
-Morning (3–4h): Kubernetes & deployment thinking
-
-Goals
-
-Be able to talk through deploying your mini-app to K8s
-
-Know core k8s concepts
-
-Do
-
-Kubernetes conceptual setup (2h)
-
-Write (even if you don’t apply) sample manifests:
-
-Deployment for your backend
-
-Service exposing it internally
-
-Deployment for your frontend (or imagine it as static files served by Nginx)
-
-Add:
-
-Resource requests/limits (CPU/memory)
-
-Environment variables for DB connection
-
-Think about:
-
-How you’d handle secrets (K8s Secrets)
-
-How you’d do rolling updates / rollbacks
-
-CI/CD pipeline sketch (1.5–2h)
-
-Draft a pipeline in pseudo-YAML:
-
-Step 1: Run tests (pytest, frontend tests if any)
-
-Step 2: Build Docker images (frontend + backend)
-
-Step 3: Push to registry
-
-Step 4: Apply k8s manifests (or GitOps flow)
-
-Note where:
-
-Branch vs main deploy
-
-Tagging images with commit SHAs
-
-End-of-block checkpoint
-
-Be ready to answer:
-
-“How would you deploy and update your service on Kubernetes?”
-
-“What happens during a rolling update?”
-
-Afternoon (3h): Linux + infra + HPC fundamentals
-
-Goals
-
-Be confident navigating Linux and explaining infra pieces
-
-Have a basic HPC story
-
-Do
-
-Linux crash review (1–1.5h)
-
-Commands to mentally rehearse:
-
-ps, top/htop, df -h, du -sh *
-
-journalctl -u your-service
-
-ls -l, chmod, chown
-
-Think through:
-
-“Backend pod is failing — how do you debug?”
-
-Logs, describe pod, check events, etc.
-
-Infra components (1h)
-
-Write short notes on:
-
-Redis (cache): what you’d cache in your experiment tracker
-
-Message broker: how training jobs could publish “run_completed” events
-
-Prepare 1–2 examples:
-
-“We use Redis to cache expensive dashboard queries.”
-
-“We use a message broker so training jobs & UI are decoupled.”
-
-HPC basics (30–45 min)
-
-Understand and be ready to say:
-
-Slurm-style workflow: submit job → scheduler → node
-
-Resources: GPUs/CPUs/memory/time
-
-Logs & artifacts on shared storage
-
-Tie it back to your tool:
-
-“My tool would periodically poll the scheduler or receive events from it.”
-
-End-of-block checkpoint
-
-Can you describe:
-
-“How would your tool integrate with a GPU cluster?”
-
-“How would you coordinate hardware resource usage?”
-
-Evening (1–2h): ML fundamentals for this role
-
-Goals
-
-Be able to talk ML at a practical infra-supporting level.
-
-Do
-
-Review:
-
-What is an experiment?
-
-Train/val/test, epochs, batches
-
-Common metrics: accuracy, loss, precision/recall, F1
-
-Basic NN training loop:
-
-forward → loss → backward → optimizer step
-
-Think about:
-
-What exactly your tool tracks:
-
-Hyperparameters
-
-Metrics over steps/epochs
-
-Artifacts (models, checkpoints, plots, logs)
-
-Code version (git SHA)
-
-Know by name:
-
-MLflow / Weights & Biases & what they broadly do
-
-Day 4 – Half Day – Review, Mock Interview, Polish
-Block 1 (2h): Focused review & flash notes
-
-Goals
-
-Lock in key talking points
-
-Fill tiny gaps
-
-Do
-
-Cheat sheet creation (1–1.5h)
-
-One page (or two) max with:
-
-Core API design (endpoints & entities)
-
-DB schema summary
-
-Short bullet list: “How I’d deploy this on K8s”
-
-Short bullet list: “Security measures”
-
-Short bullet list: “HPC integration idea”
-
-Keep this as your pre-interview refresh doc.
-
-Quick topic flash review (30–45 min)
-
-Python:
-
-Exceptions, logging, async vs sync
-
-React:
-
-Props/state, data fetching, basic component tree
-
-DB:
-
-Indexes, joins, why relational for metadata
-
-Block 2 (2h): Mock interview & refinement
-
-Goals
-
-Practice saying things out loud
-
-Smooth out your explanations
-
-Do
-
-Self mock interview (~60–75 min)
-Answer out loud (record yourself if possible) for questions like:
-
-“Tell me about a tool you built for ML engineers.”
-
-“Design an experiment tracking system.”
-
-“How would you deploy it on Kubernetes?”
-
-“How would you scale it if usage doubles?”
-
-“How do you deal with security for internal tools?”
-
-“What’s your experience with Linux in production environments?”
-
-“How would your system interact with an HPC cluster?”
-
-Refine weak spots (~45–60 min)
-
-Any question where you rambled or froze:
-
-Write a clean 3–5 sentence answer
-
-Practice it once or twice more
+## Key API Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/health` | Health check |
+| GET | `/experiments` | List all experiments |
+| POST | `/experiments` | Create new experiment |
+| GET | `/experiments/{id}` | Get experiment with runs |
+| POST | `/runs/{id}/metrics` | Log metrics for a run |
+
+---
+
+## Database Schema
+
+```sql
+experiments (id, name, owner, description, created_at, status)
+runs (id, experiment_id, started_at, ended_at, status, seed)
+metrics (id, run_id, name, step, value, timestamp)
+```
+
+**Key Indexes:**
+- `metrics(run_id, name)` - Fast metric lookups
+- `runs(experiment_id, status)` - Filtered run queries
+
+---
+
+## Interview Questions to Prepare
+
+### Project & Architecture
+- "Tell me about a tool you built for ML engineers."
+- "Walk me through the architecture of your system."
+- "How would you scale it if usage doubles?"
+
+### Technical Deep Dives
+- "Design an experiment tracking system."
+- "How would you deploy it on Kubernetes?"
+- "What happens during a rolling update?"
+
+### Security & Operations
+- "How do you deal with security for internal tools?"
+- "What common attacks are you aware of?"
+- "Backend pod is failing — how do you debug?"
+
+### HPC & ML
+- "How would your system interact with an HPC cluster?"
+- "How would you coordinate hardware resource usage?"
+
+---
+
+## Quick Start
+
+```bash
+# Run the study app
+cd study-app
+npm install
+npm run dev
+
+# Docker deployment
+docker-compose up --build
+```
+
+---
+
+## Directory Structure
+
+```
+fundamentals/
+├── study-app/           # Next.js study plan application
+├── day1-python-backend-db/
+│   ├── 01-python-warmup.md
+│   ├── 02-backend-api.md
+│   ├── 03-database-schema.md
+│   ├── 04-db-integration.md
+│   └── 05-system-design.md
+├── day2-react-security/
+│   ├── 01-react-fundamentals.md
+│   ├── 02-data-fetching.md
+│   ├── 03-dashboard-ui.md
+│   └── 04-security-fundamentals.md
+├── day3-k8s-linux-ml/
+│   ├── 01-kubernetes-concepts.md
+│   ├── 02-cicd-pipeline.md
+│   ├── 03-linux-fundamentals.md
+│   └── 04-ml-fundamentals.md
+├── day4-review/
+│   ├── 01-cheat-sheet.md
+│   ├── 02-flash-review.md
+│   └── 03-mock-interview-questions.md
+├── docker-compose.yml
+└── readme.md
+```
+
+---
+
+## Ready When You Can...
+
+- [ ] Explain the project in under 2 minutes
+- [ ] Draw the architecture on a whiteboard
+- [ ] Discuss any technology choice with reasoning
+- [ ] Debug a "pod failing" scenario step-by-step
+- [ ] Answer "how would you scale this?" concretely
