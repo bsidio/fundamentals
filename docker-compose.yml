@@ -28,3 +28,4 @@ services:
     labels:
       - "app=study-plan"
       - "description=ML Experiment Tracker Interview Study Plan"
+      - "domain=study.bsid.io"
