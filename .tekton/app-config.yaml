@@ -1,0 +1,34 @@
+apiVersion: tekton.dev/v1
+kind: AppConfig
+metadata:
+  name: study-bsid-io
+
+spec:
+  # Deployment mode: "build" (default) or "docker-compose"
+  deploymentMode: docker-compose
+
+  # Docker Compose settings
+  composeFile: docker-compose.yml  # Path to compose file (default: docker-compose.yml)
+
+  # Target deployment configuration
+  namespace: study-bsid-io
+  appName: study-bsid-io  # Optional, defaults to metadata.name
+
+  # Harbor configuration (for private images in docker-compose.yml)
+  harbor:
+    project: apps
+    registry: harbor.sidapi.com
+
+  # Longhorn backup configuration
+  backup:
+    enabled: false  # Set to true to enable automatic backups
+    group: daily    # Backup schedule group: default, hourly, daily, weekly
+
+  # Loki logging configuration
+  logging:
+    enabled: true  # Enable centralized logging (default: true)
+
+  # Ingress  configuration (optional - auto-detected from docker-compose labels)
+  ingress:
+    autoGenerate: true   # Auto-create IngressRoutes from domain labels
+    wwwRedirect: true    # Redirect www to non-www (enabled based on labels)
